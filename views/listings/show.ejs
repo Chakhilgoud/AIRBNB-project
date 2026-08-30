@@ -1,0 +1,91 @@
+ <% layout("/layouts/boilerplate") -%>
+ <script>
+   const listing = <%- JSON.stringify(listing) %>
+
+</script>
+<div class="row mt-2">
+  <div class="col-8 offset-3">
+    <h3><%= listing.title %></h3>
+  </div>
+  <div class="listing-card col-6 offset-3 show-card listing-card"> 
+    <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="listing_image">
+    <div class="card-body">
+      <p class="card-text">Owned By <li><%= listing.owner %></li></p>
+      <p class="card-text"><%= listing.description %></p>
+      <p class="card-text">&#8377;<%= listing.price %><br></p>
+      <p class="card-text"><%= listing.location %></p>
+      <p class="card-text"><%= listing.country %></p>
+    </div>
+  </div>
+</div>
+
+<br>
+<% if(currUser && listing.owner && listing.owner._id.equals(currUser._id)) { %>
+<div class="btns">
+  <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark col-1 offset-3 edit-btn">Edit</a>
+  <!-- FIX 1: changed POSt → POST -->
+  <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
+    <button class="btn btn-dark offset-3">Delete</button>
+  </form>
+</div>
+<% } %>
+
+<!-- FIX 2: removed invalid attribute from closing div tag -->
+<div class="col-8 offset-3 mb-3">
+  <% if(currUser) { %>
+  <h4>Leave a review</h4>
+  <form action="/listings/<%= listing.id %>/reviews" method="post" novalidate class="needs-validation">
+    <div class="mb-3 mt-3">
+      <label for="rating" class="form-label">Rating</label>
+      <input type="range" min="1" max="5" id="rating" name="review[rating]" class="form-range">
+    </div>
+    <div>
+      <label for="comment" class="form-label">Comments</label>
+      <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control"></textarea>
+      <div class="invalid-feedback">Please add some comments</div>
+    </div>
+    <button class="btn btn-outline-dark">Submit</button>
+  </form>
+  <hr/>
+  <% } %>
+
+  <% if(listing.reviews.length > 0)  { %> 
+  <div class="row">
+    <p><b>All Reviews</b></p>
+    <% for(review of listing.reviews){ %>
+    <div class="card col-5 ms-3 mb-3">
+      <div class="card-body">
+        <!-- FIX 3: changed review.author.user → review.author.username -->
+        <div class="card-title">@<%= review.author.username %></div>
+        <p class="card-text"><%= review.comment %></p>
+        <p class="card-text"><%= review.rating %> stars</p>
+      </div>
+      <form class="mb-3" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
+        <button class="btn btn-sm btn-dark">delete</button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+<div class=" col-6 offset-3 mb-3">
+    <h3>Where you'll be</h3>
+  </div>
+ <div id ="map">
+    
+<script >
+maptilersdk.config.apiKey = 'stL5z1MuI5Phm2F3r1lh';
+const map = new maptilersdk.Map({
+  container: 'map', // container's id or the HTML element in which the SDK will render the map
+  style: maptilersdk.MapStyle.STREETS,
+  center: listing.geometry.coordinates , // starting position [lng, lat]
+  zoom: 9// starting zoom
+});
+new maptilersdk.Marker({ color: "red" })
+    .setLngLat(listing.geometry.coordinates)
+    .setPopup(
+      new maptilersdk.Popup({ offset: 25}).setHTML(`<h4>${listing.location}</h4><p>Excat location provided after booking</p>`)
+    )
+    .addTo(map);
+</script>
+ </div>
