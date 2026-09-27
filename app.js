@@ -11,24 +11,29 @@ const ejsMate = require("ejs-mate");
 app.use(express.static(path.join(__dirname, "/public")));
 const {listingSchema, reviewSchema} = require("./schema.js");
 const session = require("express-session");
+const MongoStore = require("connect-mongo").default;
 const flash = require("connect-flash");
 const passport = require("passport");
 const Localstrategy = require("passport-local");
 const User = require("./models/user.js");
 
-// FIX 2: corrected filenames from listing.js/review.js to listings.js/reviews.js
+
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
-// const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+
+require("dotenv").config();
 const dbUrl = process.env.ATLASDB_URL;
+
+console.log("Db URL:", process.env.ATLASDB_URL)
 main()
     .then((res) => { console.log("connected to db"); })
     .catch((err) => { console.log(err); });
 
 async function main() {
     await mongoose.connect(dbUrl);
+    console.log("COnnected to Db");
 }
 
 app.engine('ejs', ejsMate);
@@ -37,12 +42,27 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
 
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    crypto:{
+        secret: process.env.SECRET,
+    },
+    touchAfter: 24 * 3600,
+});
+
+store.on("error",()=>{
+   console.log("ERROR IN MONGO SESSION STORE", err);
+
+})
+
+
 const sessionOptions = {
-    secret: "mysupersecretcode",
+    store,
+    secret: process.env.SECRET,
     resave: false,
     saveUnintialized: false,
     cookie: {
-        // FIX 3: added missing * 60 for seconds (7 days in milliseconds)
+        
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
@@ -70,7 +90,6 @@ app.use((req, res, next) => {
 });
 
 app.use("/listings", listingRouter);
-// FIX 1: fixed typo "reviwes" -> "reviews"
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 
