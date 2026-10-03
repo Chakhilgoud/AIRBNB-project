@@ -82,9 +82,9 @@ passport.deserializeUser(User.deserializeUser());
 //     res.send("Hi i am root");
 // });
 
-app.get("/", (req,res)=>{
-    res.send("server is running");
-    });
+// app.get("/", (req,res)=>{
+//     res.send("server is running");
+//     });
 
 app.use((req, res, next) => {
     res.locals.success = req.flash("success");
