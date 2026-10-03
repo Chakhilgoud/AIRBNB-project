@@ -78,9 +78,13 @@ passport.use(new Localstrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-app.get("/", (req, res) => {
-    res.send("Hi i am root");
-});
+// app.get("/", (req, res) => {
+//     res.send("Hi i am root");
+// });
+
+app.get("/", (req,res)=>{
+    res.send("server is running");
+    });
 
 app.use((req, res, next) => {
     res.locals.success = req.flash("success");
